@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>競馬GO｜日本賽馬預測與復盤誌</title>
+  <style>
+    :root {
+      --bg-main: #FAF8F5;
+      --bg-card: #F2ECE4;
+      --text-primary: #3B2B20;
+      --text-secondary: #7A685B;
+      --accent: #8C5E3C;
+      --accent-hover: #6F482B;
+      --border: #E2D7CA;
+      --status-hit: #4A6B53;
+      --status-upcoming: #9E6B43;
+      --status-miss: #8A5A52;
+      --white: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 頂部導覽列 */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: rgba(250, 248, 245, 0.94);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    .brand-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: var(--text-primary);
+    }
+
+    .brand-sub {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      letter-spacing: 0.05em;
+    }
+
+    nav {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 0.45rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-primary);
+      background-color: var(--bg-card);
+    }
+
+    .nav-btn.active {
+      color: var(--white);
+      background-color: var(--accent);
+    }
+
+    /* 主容器 */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+    }
+
+    .page-section {
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .page-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 區塊標題 */
+    .section-header {
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text-primary);
+    }
+
+    .section-note {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* 命中率儀表板 */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1.2;
+      margin-bottom: 0.35rem;
+    }
+
+    .stat-detail {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* 賽事卡片列表 */
+    .race-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .race-card {
+      background-color: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.35rem 1.5rem;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .race-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 6px 18px rgba(59, 43, 32, 0.06);
+    }
+
+    .race-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .race-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      flex-wrap: wrap;
+    }
+
+    .meta-tag {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      padding: 0.15rem 0.55rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .status-badge {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      color: var(--white);
+      letter-spacing: 0.03em;
+    }
+
+    .status-completed {
+      background-color: var(--status-hit);
+    }
+
+    .status-upcoming {
+      background-color: var(--status-upcoming);
+    }
+
+    .race-card-title {
+      font-size: 1.22rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .race-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding-top: 0.75rem;
+      border-top: 1px dashed var(--border);
+      font-size: 0.9rem;
+    }
+
+    .honmei-preview {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .mark-symbol {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background-color: var(--accent);
+      color: var(--white);
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .read-more {
+      color: var(--accent);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    /* 篩選器區域（全部賽事頁） */
+    .filter-panel {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-label {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      min-width: 76px;
+      padding-top: 0.3rem;
+    }
+
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      flex: 1;
+    }
+
+    .chip {
+      background-color: var(--bg-main);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .chip:hover {
+      border-color: var(--accent);
+    }
+
+    .chip.active {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: var(--white);
+      font-weight: 600;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      background-color: var(--bg-card);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* 單篇賽事詳細頁 */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.45rem 0.95rem;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      transition: all 0.18s ease;
+    }
+
+    .back-btn:hover {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: var(--white);
+    }
+
+    .detail-header-box {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .detail-meta-line {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .detail-title {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.35;
+    }
+
+    /* 推薦馬匹卡片 */
+    .horses-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-bottom: 2.25rem;
+    }
+
+    .horse-card {
+      background-color: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.35rem;
+      display: flex;
+      gap: 1.35rem;
+      align-items: flex-start;
+    }
+
+    .horse-card.is-honmei {
+      border-left: 5px solid var(--accent);
+    }
+
+    .horse-media {
+      flex-shrink: 0;
+      width: 180px;
+      height: 135px;
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .horse-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .img-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0.5rem;
+      background-color: var(--bg-card);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .horse-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .horse-header {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .horse-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      font-size: 1.05rem;
+      font-weight: 800;
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border: 1.5px solid var(--accent);
+    }
+
+    .horse-mark.mark-honmei {
+      background-color: var(--accent);
+      color: var(--white);
+    }
+
+    .horse-name {
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .horse-jockey {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      background-color: var(--bg-main);
+      padding: 0.15rem 0.6rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .horse-comment {
+      font-size: 0.96rem;
+      color: var(--text-primary);
+      margin-top: 0.5rem;
+      line-height: 1.75;
+    }
+
+    /* 比賽結果與賽後復盤區塊 */
+    .result-box {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.6rem;
+    }
+
+    .result-box.upcoming-box {
+      text-align: center;
+      border-style: dashed;
+      color: var(--text-secondary);
+      padding: 2rem 1.5rem;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .result-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .hit-badge {
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 0.25rem 0.8rem;
+      border-radius: 999px;
+      color: var(--white);
+    }
+
+    .hit-badge.hit {
+      background-color: var(--status-hit);
+    }
+
+    .hit-badge.miss {
+      background-color: var(--status-miss);
+    }
+
+    .ranking-display {
+      background-color: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      font-weight: 700;
+      font-size: 0.98rem;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+
+    .review-text {
+      font-size: 0.96rem;
+      color: var(--text-primary);
+      line-height: 1.8;
+    }
+
+    /* 頁尾 */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 1.75rem 1rem;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+    }
+
+    /* 響應式設計 (RWD) */
+    @media (max-width: 680px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .horse-card {
+        flex-direction: column;
+      }
+
+      .horse-media {
+        width: 100%;
+        height: 190px;
+      }
+
+      .detail-title {
+        font-size: 1.35rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部導覽列 -->
+  <header>
+    <div class="nav-container">
+      <div class="brand" onclick="navigateTo('home')">
+        <span class="brand-title">競馬GO</span>
+        <span class="brand-sub">日本重賞預測與復盤誌</span>
+      </div>
+      <nav>
+        <button id="nav-home" class="nav-btn active" onclick="navigateTo('home')">首頁</button>
+        <button id="nav-races" class="nav-btn" onclick="navigateTo('races')">全部賽事</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 主要內容區 -->
+  <main>
+    <!-- 子頁面一：首頁 (Home) -->
+    <section id="page-home" class="page-section active">
+      <div class="section-header">
+        <h2 class="section-title">本命馬（◎）命中率統計</h2>
+        <span class="section-note">僅統計已開獎賽事</span>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">總命中率（累計全部已開獎）</div>
+          <div id="stat-total-rate" class="stat-value">0%</div>
+          <div id="stat-total-detail" class="stat-detail">尚無已開獎紀錄</div>
+        </div>
+        <div class="stat-card">
+          <div id="stat-month-label" class="stat-label">本月份命中率</div>
+          <div id="stat-month-rate" class="stat-value">0%</div>
+          <div id="stat-month-detail" class="stat-detail">尚無已開獎紀錄</div>
+        </div>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">最新賽事預測</h2>
+        <span class="section-note">點擊卡片查看詳細分析</span>
+      </div>
+      <div id="home-race-list" class="race-list"></div>
+    </section>
+
+    <!-- 子頁面二：全部賽事 (Races) -->
+    <section id="page-races" class="page-section">
+      <div class="section-header">
+        <h2 class="section-title">全部賽事資料庫</h2>
+        <span id="races-count-note" class="section-note"></span>
+      </div>
+
+      <div class="filter-panel">
+        <div class="filter-row">
+          <span class="filter-label">開催馬場</span>
+          <div id="venue-filters" class="filter-chips"></div>
+        </div>
+        <div class="filter-row">
+          <span class="filter-label">比賽月份</span>
+          <div id="month-filters" class="filter-chips"></div>
+        </div>
+      </div>
+
+      <div id="all-race-list" class="race-list"></div>
+    </section>
+
+    <!-- 子頁面三：單篇賽事詳細頁 (Race Detail) -->
+    <section id="page-detail" class="page-section">
+      <button class="back-btn" onclick="goBack()">← 返回列表</button>
+      <div id="race-detail-content"></div>
+    </section>
+  </main>
+
+  <footer>
+    競馬GO — 個人日本賽馬預測與賽後復盤紀錄
+  </footer>
+
+  <script>
+    /**
+     * 賽事資料陣列 (RACES_DATA)
+     * 嚴格遵守 AGENTS.md 規範結構
+     */
+    const RACES_DATA = [
+      {
+        id: "2026-04-05-osaka-hai",
+        title: "第70回 大阪杯 (G1)",
+        date: "2026-04-05",
+        venue: "阪神",
+        distance: "草地 2000m",
+        status: "completed",
+        horses: [
+          {
+            mark: "◎",
+            name: "北十字星 (クロワデュノール)",
+            jockey: "北村友一 (北村友一)",
+            image: "./Assets/26OSAKA_1.jpeg",
+            comment: "北十字星在之前的皋月賞與奧蘭治錦標皆展現出優秀的實力，雖然在其後的凱旋門大賽與日本盃未能取勝，但在經過春季休養後相信其實力已經恢復得差不多。期望牠在本次的大阪杯也會以以前列的姿態取得優勝。"
+          },
+          {
+            mark: "○",
+            name: "野田分位 (ダノンデサイル)",
+            jockey: "坂井瑠星 (坂井瑠星)",
+            image: "./Assets/26OSAKA_2.jpg",
+            comment: "野田分位在2024年日本盃與2025年杜拜司馬經典賽表現相當亮眼，顯示出其在草地中距離實力不俗。雖然本次賽事從戶崎圭太改為由坂井瑠星策騎，但相信牠在這場比賽也能跑出不錯的成績。"
+          },
+          {
+            mark: "▲",
+            name: "名將田原 (メイショウタバル)",
+            jockey: "武豐 (武豊)",
+            image: "./Assets/26OSAKA_3.jpg",
+            comment: "雖然去年的秋季天皇賞與有馬紀念的成績不太好，但作為寶塚紀念優勝馬的實力也不容忽視。經過春季休養後，牠絕對有取得逆轉勝的實力，實在值得關注。"
+          }
+        ],
+        result: {
+          isHit: true,
+          rankingText: "1着：北十字星 (クロワデュノール) / 2着：名將田原 (メイショウタバル) / 3着：野田分位 (ダノンデサイル)",
+          review: "北十字星不負眾望取得第一，而野田分位與名將田原也分別取得第三和第二的好成績。如果沒有意外發生，估計這三匹馬也會成為本年主流路線的看點。"
+        }
+      },
+      {
+        id: "2026-05-03-tenno-sho-spring",
+        title: "第173回 天皇賞（春） (G1)",
+        date: "2026-05-03",
+        venue: "阪神",
+        distance: "草地 3200m",
+        status: "completed",
+        horses: [
+          {
+            mark: "◎",
+            name: "北十字星 (クロワデュノール)",
+            jockey: "北村友一 (北村友一)",
+            image: "./Assets/26TENHARU_1.jpg",
+            comment: "北十字星在大阪杯的強敵—野田分位與名將田原這次無緣參戰春季天皇賞，自然使得北十字星成為最受青睞的馬匹。雖然牠尚未參與過長距離的賽事，但我相信牠的實力足以應對3200米的途程。"
+          },
+          {
+            mark: "○",
+            name: "地球頌 (アドマイヤテラ)",
+            jockey: "武豐 (武豊)",
+            image: "./Assets/26TENHARU_2.jpg",
+            comment: "地球頌在這次春季天皇賞的前哨戰—阪神大賞典上以3馬位的優勢取得優勝，並打破阪神3000米賽事的時間紀錄，絕對是值得關注的一匹黑馬。"
+          },
+          {
+            mark: "▲",
+            name: "春明水清 (アクアヴァーナル)",
+            jockey: "松山弘平 (松山弘平)",
+            image: "./Assets/26TENHARU_3.jpg",
+            comment: "在阪神大賞典取得第二的春明水清雖然是一匹牝馬，但其擁有與牡馬在長距離對抗的實力。相信牠在這次的春季天皇賞也會是一大強敵。"
+          }
+        ],
+        result: {
+          isHit: true,
+          rankingText: "1着：北十字星 (クロワデュノール) / 2着：林森處 (ハヤテノフクノスケ) / 3着：地球頌 (アドマイヤテラ)",
+          review: "這次的春季天皇賞裡北十字星以鼻位差險勝大冷門林森處，實在是意料之外。而地球頌與春明水清則分別取得第三和第四，算是也跑出了不錯的成績。"
+        }
+      }
+    ];
+
+    // 狀態管理
+    let currentView = "home";
+    let previousView = "home";
+    let selectedVenue = "全部";
+    let selectedMonth = "全部";
+
+    // 依日期由新到舊排序
+    function getSortedRaces() {
+      return [...RACES_DATA].sort((a, b) => b.date.localeCompare(a.date));
+    }
+
+    // 圖片載入失敗防破圖處理
+    function handleImageError(imgEl, horseName) {
+      const parent = imgEl.parentElement;
+      if (!parent) return;
+      parent.innerHTML = `<div class="img-fallback"><span>No Image</span><span style="font-size:0.72rem;margin-top:4px;opacity:0.85;">${escapeHtml(horseName)}</span></div>`;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // 計算並渲染首頁命中率儀表板
+    function renderStats() {
+      const completedRaces = RACES_DATA.filter(r => r.status === "completed");
+      const totalCount = completedRaces.length;
+      const totalHits = completedRaces.filter(r => r.result && r.result.isHit).length;
+
+      const totalRateEl = document.getElementById("stat-total-rate");
+      const totalDetailEl = document.getElementById("stat-total-detail");
+
+      if (totalCount === 0) {
+        totalRateEl.textContent = "0%";
+        totalDetailEl.textContent = "尚無已開獎紀錄 (0/0)";
+      } else {
+        const rate = Math.round((totalHits / totalCount) * 100);
+        totalRateEl.textContent = `${rate}%`;
+        totalDetailEl.textContent = `命中 ${totalHits} 場 / 共 ${totalCount} 場已開獎`;
+      }
+
+      // 抓取系統當前年月，若當前月份無已開獎賽事則顯示最新賽事所屬年月
+      const now = new Date();
+      const systemYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const sorted = getSortedRaces();
+      const hasSystemMonthCompleted = completedRaces.some(r => r.date.startsWith(systemYM));
+      const targetYM = hasSystemMonthCompleted
+        ? systemYM
+        : (sorted.length > 0 ? sorted[0].date.slice(0, 7) : systemYM);
+
+      const monthCompleted = completedRaces.filter(r => r.date.startsWith(targetYM));
+      const monthCount = monthCompleted.length;
+      const monthHits = monthCompleted.filter(r => r.result && r.result.isHit).length;
+
+      document.getElementById("stat-month-label").textContent = `當月命中率（${targetYM}）`;
+      const monthRateEl = document.getElementById("stat-month-rate");
+      const monthDetailEl = document.getElementById("stat-month-detail");
+
+      if (monthCount === 0) {
+        monthRateEl.textContent = "0%";
+        monthDetailEl.textContent = "尚無已開獎紀錄 (0/0)";
+      } else {
+        const mRate = Math.round((monthHits / monthCount) * 100);
+        monthRateEl.textContent = `${mRate}%`;
+        monthDetailEl.textContent = `命中 ${monthHits} 場 / 共 ${monthCount} 場已開獎`;
+      }
+    }
+
+    // 產生單張賽事列表卡片 HTML
+    function createRaceCardHTML(race) {
+      const honmei = race.horses.find(h => h.mark === "◎") || race.horses[0];
+      const isCompleted = race.status === "completed";
+      const statusBadge = isCompleted
+        ? `<span class="status-badge status-completed">賽果已更新</span>`
+        : `<span class="status-badge status-upcoming">賽前預測中</span>`;
+
+      const hitTag = isCompleted && race.result
+        ? (race.result.isHit
+            ? `<span style="color:var(--status-hit);font-weight:700;font-size:0.85rem;">・本命命中 1着</span>`
+            : `<span style="color:var(--status-miss);font-weight:700;font-size:0.85rem;">・本命未命中</span>`)
+        : "";
+
+      return `
+        <article class="race-card" onclick="openRaceDetail('${escapeHtml(race.id)}')">
+          <div class="race-card-top">
+            <div class="race-meta">
+              <span>${escapeHtml(race.date)}</span>
+              <span class="meta-tag">${escapeHtml(race.venue)}</span>
+              <span class="meta-tag">${escapeHtml(race.distance)}</span>
+            </div>
+            ${statusBadge}
+          </div>
+          <h3 class="race-card-title">${escapeHtml(race.title)}</h3>
+          <div class="race-card-footer">
+            <div class="honmei-preview">
+              <span class="mark-symbol">◎</span>
+              <span>本命：${escapeHtml(honmei ? honmei.name : "-")}</span>
+              ${hitTag}
+            </div>
+            <span class="read-more">閱讀預測與分析 →</span>
+          </div>
+        </article>
+      `;
+    }
+
+    // 渲染首頁最新賽事列表（最多顯示最新 5 場）
+    function renderHomeList() {
+      const listEl = document.getElementById("home-race-list");
+      const recent = getSortedRaces().slice(0, 5);
+      if (recent.length === 0) {
+        listEl.innerHTML = `<div class="empty-state">目前尚無賽事預測文章。</div>`;
+        return;
+      }
+      listEl.innerHTML = recent.map(createRaceCardHTML).join("");
+    }
+
+    // 渲染「全部賽事」篩選器與列表
+    function renderFiltersAndAllRaces() {
+      const sorted = getSortedRaces();
+      const venues = ["全部", ...new Set(sorted.map(r => r.venue))];
+      const months = ["全部", ...new Set(sorted.map(r => r.date.slice(0, 7)))];
+
+      if (!venues.includes(selectedVenue)) selectedVenue = "全部";
+      if (!months.includes(selectedMonth)) selectedMonth = "全部";
+
+      const venueContainer = document.getElementById("venue-filters");
+      venueContainer.innerHTML = venues.map(v => `
+        <button class="chip ${v === selectedVenue ? "active" : ""}" onclick="setVenueFilter('${escapeHtml(v)}')">${escapeHtml(v)}</button>
+      `).join("");
+
+      const monthContainer = document.getElementById("month-filters");
+      monthContainer.innerHTML = months.map(m => `
+        <button class="chip ${m === selectedMonth ? "active" : ""}" onclick="setMonthFilter('${escapeHtml(m)}')">${escapeHtml(m)}</button>
+      `).join("");
+
+      const filtered = sorted.filter(r => {
+        const matchVenue = selectedVenue === "全部" || r.venue === selectedVenue;
+        const matchMonth = selectedMonth === "全部" || r.date.startsWith(selectedMonth);
+        return matchVenue && matchMonth;
+      });
+
+      document.getElementById("races-count-note").textContent = `共 ${filtered.length} 場賽事`;
+      const listEl = document.getElementById("all-race-list");
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="empty-state">找不到符合所選篩選條件的賽事紀錄。</div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(createRaceCardHTML).join("");
+    }
+
+    function setVenueFilter(venue) {
+      selectedVenue = venue;
+      renderFiltersAndAllRaces();
+    }
+
+    function setMonthFilter(month) {
+      selectedMonth = month;
+      renderFiltersAndAllRaces();
+    }
+
+    // 開啟單篇賽事詳細頁
+    function openRaceDetail(raceId) {
+      const race = RACES_DATA.find(r => r.id === raceId);
+      if (!race) return;
+
+      if (currentView !== "detail") {
+        previousView = currentView;
+      }
+
+      const isCompleted = race.status === "completed";
+      const statusBadge = isCompleted
+        ? `<span class="status-badge status-completed">賽果已更新</span>`
+        : `<span class="status-badge status-upcoming">賽前預測中</span>`;
+
+      const horsesHTML = race.horses.map(horse => {
+        const isHonmei = horse.mark === "◎";
+        return `
+          <div class="horse-card ${isHonmei ? "is-honmei" : ""}">
+            <div class="horse-media">
+              <img
+                src="${escapeHtml(horse.image)}"
+                alt="${escapeHtml(horse.name)}"
+                onerror="handleImageError(this, '${escapeHtml(horse.name)}')"
+              />
+            </div>
+            <div class="horse-info">
+              <div class="horse-header">
+                <span class="horse-mark ${isHonmei ? "mark-honmei" : ""}">${escapeHtml(horse.mark)}</span>
+                <h3 class="horse-name">${escapeHtml(horse.name)}</h3>
+                <span class="horse-jockey">騎師：${escapeHtml(horse.jockey)}</span>
+              </div>
+              <p class="horse-comment">${escapeHtml(horse.comment)}</p>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      let resultHTML = "";
+      if (!isCompleted) {
+        resultHTML = `
+          <div class="result-box upcoming-box">
+            <strong>賽事尚未開跑</strong>
+            <p style="margin-top:0.35rem;font-size:0.9rem;">賽後將第一時間更新前三名賽果與復盤短評。</p>
+          </div>
+        `;
+      } else {
+        const hitBadge = race.result && race.result.isHit
+          ? `<span class="hit-badge hit">本命命中 1着</span>`
+          : `<span class="hit-badge miss">未命中</span>`;
+        resultHTML = `
+          <div class="result-box">
+            <div class="result-header">
+              <h3 class="result-title">比賽結果與賽後復盤</h3>
+              ${hitBadge}
+            </div>
+            <div class="ranking-display">${escapeHtml(race.result.rankingText || "賽果整理中")}</div>
+            <p class="review-text">${escapeHtml(race.result.review || "")}</p>
+          </div>
+        `;
+      }
+
+      const detailContainer = document.getElementById("race-detail-content");
+      detailContainer.innerHTML = `
+        <div class="detail-header-box">
+          <div class="detail-meta-line">
+            <span>${escapeHtml(race.date)}</span>
+            <span class="meta-tag">${escapeHtml(race.venue)}</span>
+            <span class="meta-tag">${escapeHtml(race.distance)}</span>
+            ${statusBadge}
+          </div>
+          <h1 class="detail-title">${escapeHtml(race.title)}</h1>
+        </div>
+
+        <div class="section-header">
+          <h2 class="section-title">本場焦點推薦馬</h2>
+          <span class="section-note">◎本命 / ○對抗 / ▲單穴 / △連下</span>
+        </div>
+        <div class="horses-list">
+          ${horsesHTML}
+        </div>
+
+        ${resultHTML}
+      `;
+
+      switchSection("detail");
+      window.location.hash = `race/${encodeURIComponent(race.id)}`;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // 導覽切換
+    function navigateTo(view) {
+      switchSection(view);
+      window.location.hash = view;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function goBack() {
+      navigateTo(previousView || "home");
+    }
+
+    function switchSection(view) {
+      currentView = view;
+      document.querySelectorAll(".page-section").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
+
+      if (view === "home") {
+        document.getElementById("page-home").classList.add("active");
+        document.getElementById("nav-home").classList.add("active");
+      } else if (view === "races") {
+        document.getElementById("page-races").classList.add("active");
+        document.getElementById("nav-races").classList.add("active");
+      } else if (view === "detail") {
+        document.getElementById("page-detail").classList.add("active");
+        const navTarget = document.getElementById(`nav-${previousView}`);
+        if (navTarget) navTarget.classList.add("active");
+      }
+    }
+
+    // 處理網址 Hash 路由
+    function handleHashChange() {
+      const hash = window.location.hash.replace(/^#/, "");
+      if (hash.startsWith("race/")) {
+        const id = decodeURIComponent(hash.slice(5));
+        if (RACES_DATA.some(r => r.id === id)) {
+          openRaceDetail(id);
+          return;
+        }
+      }
+      if (hash === "races") {
+        switchSection("races");
+      } else {
+        switchSection("home");
+      }
+    }
+
+    // 初始化頁面
+    function init() {
+      renderStats();
+      renderHomeList();
+      renderFiltersAndAllRaces();
+      handleHashChange();
+      window.addEventListener("hashchange", handleHashChange);
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
